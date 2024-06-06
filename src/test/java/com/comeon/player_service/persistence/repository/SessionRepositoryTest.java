@@ -2,13 +2,9 @@ package com.comeon.player_service.persistence.repository;
 
 import static com.comeon.player_service.persistence.repository.TestEntities.playerEntityBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
-import com.comeon.player_service.persistence.entity.PlayerEntity;
 import com.comeon.player_service.persistence.entity.SessionEntity;
 import java.time.Instant;
-import java.util.Optional;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -35,5 +31,10 @@ class SessionRepositoryTest {
 
         // Then
         assertThat(byEmailAndPassword).isPresent();
+        assertThat(byEmailAndPassword).get().satisfies(it -> {
+            assertThat(it.getPlayer().getEmail()).isEqualTo(email);
+            assertThat(it.getPlayer().getPassword()).isEqualTo(password);
+            assertThat(it.getId()).isNotNull();
+        });
     }
 }

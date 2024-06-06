@@ -8,6 +8,6 @@ class PlayerServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
-	}
 
+	}
 }

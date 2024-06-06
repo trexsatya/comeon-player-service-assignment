@@ -1,10 +1,12 @@
 package com.comeon.player_service.persistence.entity;
 
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Table(name = "players")
 @AllArgsConstructor
+@Getter
 public class PlayerEntity {
     public static final Integer DEFAULT_SESSION_TIME_LIMIT = Integer.MAX_VALUE;
 
@@ -23,6 +26,7 @@ public class PlayerEntity {
     @Id private Long id;
 
     @Nonnull
+    @Column(unique = true)
     String email;
 
     @Nonnull
