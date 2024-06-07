@@ -1,24 +1,23 @@
 package com.comeon.player_service.api.dtos;
 
-import jakarta.annotation.Nonnull;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 
 @Builder
 @Data
 public class CreatePlayerDTO {
-    @Nonnull
+    @NotNull
     String email;
-    @Nonnull
+    @NotNull
     String password;
-    @Nonnull
+    @NotNull
     String name;
-    @Nonnull
+    @NotNull
     String surname;
-    @Nonnull
+    @NotNull
     LocalDate dateOfBirth;
-    @Nonnull
+    @NotNull
     String address;
 }
