@@ -8,13 +8,11 @@ import lombok.ToString;
 
 @Builder
 @Getter
-@ToString(onlyExplicitlyIncluded = true)
+@ToString
 public class Session {
-    @ToString.Include
     UUID sessionId;
-    @ToString.Include
-    Instant startedAt;
-
-    Instant endedAt;
+    Instant createdAt;
+    Instant lastLoginAt;
+    Instant lastLogoutAt;
     Integer activeTimeInSeconds;
 }

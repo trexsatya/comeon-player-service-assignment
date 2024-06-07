@@ -17,6 +17,8 @@ create table if not exists sessions
     id         uuid primary key,
     player_id  int not null,
     created_at timestamp default current_timestamp,
+    last_login_at timestamp,
+    last_logout_at timestamp,
     active_time_secs int not null,
     constraint FK_player_id foreign key (player_id) references players (id)
 );

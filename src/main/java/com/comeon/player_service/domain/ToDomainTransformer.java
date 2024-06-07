@@ -21,8 +21,8 @@ public class ToDomainTransformer {
         return Session.builder()
                       .sessionId(sessionEntity.getId())
                       .activeTimeInSeconds(sessionEntity.getActiveTimeInSeconds())
-                      .endedAt(sessionEntity.getEndedAt())
-                      .startedAt(sessionEntity.getStartedAt())
+                      .lastLogoutAt(sessionEntity.getLastLogoutAt())
+                      .lastLoginAt(sessionEntity.getLastLoginAt())
                       .build();
     }
 }

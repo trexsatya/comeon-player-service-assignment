@@ -17,12 +17,15 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * NOTE: Assumption is that a player can have only one active session in 24 hours.
+ *       Player can log in multiple times in a day and the session active time will keep adding up.
+ */
 @Service
 @RequiredArgsConstructor
 public class PlayerService {
@@ -45,6 +48,7 @@ public class PlayerService {
                 .map(it -> throwIfDailyLimitReached(it, playerEntity.getDailyLimitInSeconds()))
                 .orElseGet(() -> newSession(playerEntity));
 
+        session.setLastLogoutAt(null);
         return toDomain(sessionRepository.save(session));
     }
 
@@ -60,7 +64,7 @@ public class PlayerService {
     }
 
     private SessionEntity newSession(PlayerEntity playerEntity) {
-        return SessionEntity.builder().player(playerEntity).startedAt(Instant.now()).build();
+        return SessionEntity.builder().player(playerEntity).createdAt(Instant.now()).activeTimeInSeconds(0).lastLoginAt(Instant.now()).build();
     }
 
     private PlayerEntity ensureThatPlayerIsRegistered(String email, String password) {
@@ -70,6 +74,9 @@ public class PlayerService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     public void logoutPlayer(UUID sessionId) {
-        // logout player
+        var session = sessionRepository.findById(sessionId).orElseThrow(() -> new NotFoundException("Session not found"));
+        session.setLastLogoutAt(Instant.now());
+        var activeTime = session.getActiveTimeInSeconds() + Duration.between(session.getLastLoginAt(), session.getLastLogoutAt()).get(ChronoUnit.SECONDS);
+        session.setActiveTimeInSeconds((int) activeTime);
     }
 }

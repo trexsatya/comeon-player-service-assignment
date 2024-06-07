@@ -10,10 +10,14 @@ import org.springframework.stereotype.Component;
 public class SessionTimeCalculator {
 
     public boolean olderThanADay(SessionEntity session) {
-        return Duration.between(session.getStartedAt(), Instant.now()).get(ChronoUnit.SECONDS) >= 24*60*60;
+        return Duration.between(session.getLastLoginAt(), Instant.now()).get(ChronoUnit.SECONDS) >= 24 * 60 * 60;
     }
 
     public boolean timeLimitReached(SessionEntity session, Integer dailyLimitInSeconds) {
-        return session.getActiveTimeInSeconds() != null && session.getActiveTimeInSeconds() >= dailyLimitInSeconds;
+        var activeTimeInSeconds = session.getActiveTimeInSeconds();
+        if (session.getLastLogoutAt() == null) {
+            return activeTimeInSeconds + Duration.between(session.getLastLoginAt(), Instant.now()).getSeconds() >= dailyLimitInSeconds;
+        }
+        return activeTimeInSeconds >= dailyLimitInSeconds;
     }
 }

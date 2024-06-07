@@ -8,15 +8,18 @@ import static org.mockito.BDDMockito.willReturn;
 
 import com.comeon.player_service.domain.error.BadRequestException;
 import com.comeon.player_service.domain.error.NotFoundException;
+import com.comeon.player_service.domain.model.Session;
 import com.comeon.player_service.persistence.entity.SessionEntity;
 import com.comeon.player_service.persistence.repository.PlayerRepository;
 import com.comeon.player_service.persistence.repository.SessionRepository;
-import org.assertj.core.api.BDDAssumptions;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import lombok.SneakyThrows;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
@@ -56,7 +59,7 @@ class PlayerServiceTest {
 
         var session = playerService.loginPlayer("email", "password");
         assertThat(session).isNotNull();
-        assertThat(session.getStartedAt()).isNotNull();
+        assertThat(session.getLastLoginAt()).isNotNull();
         assertThat(session.getSessionId()).isNotNull();
 
         assertThat(sessionRepository.findAll()).hasSize(1);
@@ -67,12 +70,12 @@ class PlayerServiceTest {
         givenThatPlayerExists("email", "password");
 
         var session = playerService.loginPlayer("email", "password");
-        SessionEntity session1 = sessionRepository.findByEmailAndPassword("email", "password").orElseThrow();
+        var session1 = sessionRepository.findByEmailAndPassword("email", "password").orElseThrow();
         willReturn(true).given(sessionTimeCalculator).olderThanADay(any());
 
         var session2 = playerService.loginPlayer("email", "password");
         assertThat(session.getSessionId()).isNotEqualTo(session2.getSessionId());
-        assertThat(session2.getStartedAt()).isAfter(session.getStartedAt());
+        assertThat(session2.getLastLoginAt()).isAfter(session.getLastLoginAt());
     }
 
     @Test
@@ -80,12 +83,34 @@ class PlayerServiceTest {
         givenThatPlayerExists("email", "password");
 
         var session = playerService.loginPlayer("email", "password");
-        SessionEntity session1 = sessionRepository.findByEmailAndPassword("email", "password").orElseThrow();
+        var session1 = sessionRepository.findByEmailAndPassword("email", "password").orElseThrow();
         willReturn(false).given(sessionTimeCalculator).olderThanADay(any());
         willReturn(true).given(sessionTimeCalculator).timeLimitReached(any(), any());
 
         assertThatThrownBy(() -> playerService.loginPlayer("email", "password"))
                 .isExactlyInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    void sessionDoesNotExist_logoutAttempt_ShouldThrow() {
+        givenThatPlayerExists("email@email.com", "passw");
+        assertThatThrownBy(() -> playerService.logoutPlayer(UUID.randomUUID()))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    @SneakyThrows
+    void logoutAttempt_ShouldUpdateActiveTime() {
+        givenThatPlayerExists("email@email.com", "passw");
+        var session = playerService.loginPlayer("email@email.com", "passw");
+
+        var prevActiveTime = session.getActiveTimeInSeconds();
+
+        Thread.sleep(2000);
+        playerService.logoutPlayer(session.getSessionId());
+
+        var updatedActiveTimeInSeconds = sessionRepository.findById(session.getSessionId()).orElseThrow().getActiveTimeInSeconds();
+        assertThat(updatedActiveTimeInSeconds).isGreaterThan(prevActiveTime);
     }
 
     private void givenThatPlayerExists(String email, String password) {

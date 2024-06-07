@@ -24,7 +24,7 @@ class SessionRepositoryTest {
         var playerEntity = playerEntityBuilder(email, password).build();
         playerRepository.save(playerEntity);
 
-        SessionEntity sessionEntity = SessionEntity.builder().startedAt(Instant.now()).player(playerEntity).build();
+        SessionEntity sessionEntity = SessionEntity.builder().createdAt(Instant.now()).player(playerEntity).build();
         sessionRepository.save(sessionEntity);
         // When
         var byEmailAndPassword = sessionRepository.findByEmailAndPassword(email, password);
